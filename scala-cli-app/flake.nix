@@ -68,7 +68,8 @@
 
           outputHashAlgo = "sha256";
           outputHashMode = "recursive";
-          outputHash = "sha256-fidGzudPWjuW5sXgeCuLU29DlOqOLAVxxAblyCPn+jU=";
+          # NOTE: don't forget to update this when deps change!
+          outputHash = "sha256-wnUokVwAEmktcHvEoeSAloCpYIyYV2dggua+qCeaTa0=";
         };
 
         scala-native-app = pkgs.stdenv.mkDerivation {
@@ -230,31 +231,31 @@
         devShells.default = devShell;
 
         packages = rec {
-          native = scala-native-app;
-          graal = graal-native-image-app;
           jvm = jvm-app;
+          graal = graal-native-image-app;
+          native = scala-native-app;
           node = node-app;
-          default = native;
+          default = jvm;
         };
 
         apps = rec {
-          native = {
+          jvm = {
             type = "app";
-            program = "${scala-native-app}/bin/app";
+            program = "${jvm-app}/bin/app";
           };
           graal = {
             type = "app";
             program = "${graal-native-image-app}/bin/app";
           };
-          jvm = {
+          native = {
             type = "app";
-            program = "${jvm-app}/bin/app";
+            program = "${scala-native-app}/bin/app";
           };
           node = {
             type = "app";
             program = "${node-app}/bin/app";
           };
-          default = native;
+          default = jvm;
         };
       });
 }
