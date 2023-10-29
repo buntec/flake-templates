@@ -12,7 +12,5 @@
 
     };
 
-    defaultTemplate = self.templates.scala-cli-app;
-
   };
 }
