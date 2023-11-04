@@ -1,11 +1,14 @@
 {
   description = "My Scala app";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.devshell.url = "github:numtide/devshell";
-  inputs.my-nix-utils.url = "github:buntec/nix-utils";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    devshell.url = "github:numtide/devshell";
+    typelevel-nix.url = "github:typelevel/typelevel-nix";
+    my-nix-utils.url = "github:buntec/nix-utils";
+  };
 
-  outputs = { self, nixpkgs, devshell, my-nix-utils, ... }:
+  outputs = { self, nixpkgs, devshell, typelevel-nix, my-nix-utils, ... }:
 
     let
       inherit (nixpkgs.lib) genAttrs;
@@ -27,49 +30,19 @@
             inherit system;
             overlays = [ devshell.overlays.default ];
           };
-
-          scalaDevShell = pkgs.devshell.mkShell {
-            name = "scala-dev-shell";
-            commands = with pkgs; [
-              { package = scala-cli; }
-              { package = sbt; }
-              { package = nodejs; }
-            ];
-            packages = with pkgs; [
-              jdk
-              sbt
-              scala-cli
-              metals
-              clang
-              coreutils
-              llvmPackages.libcxxabi
-              openssl
-              s2n-tls
-              which
-              zlib
-            ];
-
-            env = [
-              {
-                name = "JAVA_HOME";
-                value = "${pkgs.jdk}";
-              }
-              {
-                name = "LIBRARY_PATH";
-                prefix = "$DEVSHELL_DIR/lib:${pkgs.openssl.out}/lib";
-              }
-              {
-                name = "C_INCLUDE_PATH";
-                prefix = "$DEVSHELL_DIR/include";
-              }
-              {
-                name = "LLVM_BIN";
-                value = "${pkgs.clang}/bin";
-              }
-            ];
-
+        in {
+          default = pkgs.devshell.mkShell {
+            imports = [ typelevel-nix.typelevelShell ];
+            name = "my-app-dev-shell";
+            typelevelShell = {
+              jdk.package = pkgs.jdk;
+              nodejs.enable = true;
+              native.enable = true;
+              native.libraries = [ pkgs.zlib pkgs.s2n-tls pkgs.openssl ];
+            };
+            packages = with pkgs; [ coreutils which ];
           };
-        in { default = scalaDevShell; });
+        });
 
       packages = eachSystem (system:
         let
